@@ -5,7 +5,7 @@ import (
   "net"
 )
 
-const bufSize = 1024
+const BUF_SIZE = 1024
 
 type Reader struct {
   buf []byte
@@ -32,7 +32,7 @@ func NewReader(host string, port string) (*Reader, error) {
     return nil, err
   }
 
-  conn.SetReadBuffer(bufSize)
+  conn.SetReadBuffer(BUF_SIZE)
 
-  return &Reader{make([]byte, bufSize), conn}, nil
+  return &Reader{make([]byte, BUF_SIZE), conn}, nil
 }

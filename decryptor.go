@@ -11,9 +11,9 @@ import (
 )
 
 const (
-  salt      = "123"
-  iterCount = 4096
-  keyLength = 32
+  SALT        = "123"
+  ITERS_COUNT = 4096
+  KEY_LENGTH  = 32
 )
 
 type Decryptor struct {
@@ -22,7 +22,7 @@ type Decryptor struct {
 
 func NewDecryptor(key string) (*Decryptor, error) {
     // setting up decryptor
-    secretKey := pbkdf2.Key([]byte(key), []byte(salt), iterCount, keyLength, sha1.New)
+    secretKey := pbkdf2.Key([]byte(key), []byte(SALT), ITERS_COUNT, KEY_LENGTH, sha1.New)
     aes, err := aes.NewCipher(secretKey)
     return &Decryptor{aes}, err
 }
