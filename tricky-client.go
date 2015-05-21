@@ -6,19 +6,13 @@ import (
   "os"
 )
 
-import (
-  "github.com/mattn/go-gtk/gdk"
-  "github.com/mattn/go-gtk/glib"
-  "github.com/mattn/go-gtk/gtk"
-)
-
-func dataLoop(buffer *gtk.TextBuffer, iter *gtk.TextIter) {
+func dataLoop(wnd *TrickyWindow) {
   args := os.Args[1:]
-
   host := args[0]
   port := args[1]
   key  := args[2]
 
+  // reader
   reader, err := NewReader(host, port)
   if err != nil {
     log.Fatal(err)
@@ -26,50 +20,40 @@ func dataLoop(buffer *gtk.TextBuffer, iter *gtk.TextIter) {
 
   defer reader.Close()
 
-  // setting up decryptor
+  // decryptor
   decryptor, err := NewDecryptor(key)
   if err != nil {
     log.Fatal(err)
-    fmt.Print(err)
   }
 
+  // read loop
   for {
     msg  := reader.Read()
     data := decryptor.Decrypt(msg)
-    gdk.ThreadsEnter()
-    str := string(data)
-    buffer.Insert(iter, str)
-    fmt.Print(str)
-    gdk.ThreadsLeave()
+    str  := string(data)
+    
+    wnd.AppendText(str)
   }
 }
 
 func main() {
-  glib.ThreadInit(nil)
-  gdk.ThreadsInit()
-  gdk.ThreadsEnter()
-  gtk.Init(nil)
+  if len(os.Args) < 4 {
+    fmt.Println("example of usage:")
+    fmt.Println("tricky_client host port key")
+    return
+  }
 
-  window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
-  window.SetPosition(gtk.WIN_POS_CENTER)
-  window.SetTitle("Tricky Client")
-  window.Connect("destroy", gtk.MainQuit)
+  // creating window
+  wnd, err := NewTrickyWindow()
+  if err != nil {
+    log.Fatal(err)
+  }
 
-  textview := gtk.NewTextView()
-  textview.SetEditable(true)
-  textview.SetCursorVisible(true)
-  textview.SetSizeRequest(600, 600)
-  textview.SetWrapMode(gtk.WRAP_WORD)
-  
-  var iter gtk.TextIter
-  buffer := textview.GetBuffer()
-  buffer.GetStartIter(&iter)
+  // binding start button to data loop
+  wnd.btn.Clicked().Attach(func() {
+    wnd.btn.SetEnabled(false)
+    go dataLoop(wnd)
+  })
 
-  window.Add(textview)
-  window.SetSizeRequest(600, 600)
-  window.ShowAll()
-
-  go dataLoop(buffer, &iter)
-
-  gtk.Main()
+  wnd.Run()
 }
