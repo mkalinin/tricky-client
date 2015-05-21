@@ -1,6 +1,7 @@
 package main
 
 import (
+  "bytes"
   "crypto/aes"
   "crypto/cipher"
   "crypto/sha1"  
@@ -35,6 +36,12 @@ func (d Decryptor) Decrypt(src []byte) []byte {
   // getting payload and decrypting it
   data := src[aes.BlockSize:]
   stream.XORKeyStream(data, data)
+
+  // removing 0 bytes
+  idx := bytes.Index(data, []byte{0})
+  if idx > 0 {
+    data = data[:idx]
+  }
 
   return data
 }
